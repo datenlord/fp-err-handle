@@ -3,3 +3,4 @@
 pub mod monad;
 pub mod monoid;
 pub mod iter;
+pub mod transformer;

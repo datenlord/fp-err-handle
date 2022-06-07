@@ -1,45 +1,38 @@
-use crate::monad::Monad;
+use crate::monad::{Monad, Functor};
 
-
-pub trait MonadTrans {
-    type Item;
-    type Monad: Monad;
-    type Transformer<B>: MonadTrans;
-
-    fn unit(x: Self::Item) -> Self;
-
-    fn bind<B, F>(self, f: F) -> Self::Transformer<B>
-        where F: Fn(Self::Item) -> Self::Transformer<B>;
-
-}
 #[derive(Debug)]
-pub struct OptionT<M: Monad>(M);
+pub struct OptionT<M>(M);
 
-impl<A, M> MonadTrans for OptionT<M> 
-where M: Monad<Unwrapped = A>
-{
-    type Item = A;
-    type Monad = M;
-    type Transformer<B> = OptionT<<M as Monad>::Wrapped<B>>;
+impl<M: Functor> Functor for OptionT<M> {
+    type Unwrapped = M::Unwrapped;
+    type Wrapped<B> = OptionT<M::Wrapped<B>>;
 
     #[inline]
-    fn unit(x: Self::Item) -> Self {
+    fn fmap<B, F>(self, f:F) -> Self::Wrapped<B>
+        where F: Fn(Self::Unwrapped) -> B {
+        OptionT(self.0.fmap(f))
+    }
+}
+
+
+impl<M: Monad> Monad for OptionT<M> {
+
+    #[inline]
+    fn unit(x: Self::Unwrapped) -> Self {
         Self(M::unit(x))
     }
 
     #[inline]
-    fn bind<B, F>(self, f: F) -> Self::Transformer<B>
-        where F: Fn(Self::Item) -> Self::Transformer<B> {
-            OptionT(self.0.bind(|a| f(a).0))
+    fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
+        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+        OptionT(self.0.bind(|x| f(x).0))
     }
 }
 
 
 #[cfg(test)]
 mod tests {
-    use crate::monad::Monad;
-
-    use super::{OptionT, MonadTrans};
+    use crate::{transformer::OptionT, monad::Monad};
 
     #[test]
     fn it_works() {

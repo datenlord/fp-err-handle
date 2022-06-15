@@ -1,7 +1,8 @@
 use std::fmt::Display;
 
-use crate::{monad::{Monad, Writer}};
+use crate::monad::{Monad, Writer};
 
+#[derive(Debug)]
 pub struct MapLog<I, F> {
     iter: I,
     f: F,

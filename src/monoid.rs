@@ -1,20 +1,20 @@
 pub trait Monoid {
-    fn new() -> Self;
+    fn mempty() -> Self;
 
     #[must_use]
-    fn append(&mut self, other: Self) -> Self;
+    fn mappend(&mut self, other: Self) -> Self;
 }
 
 impl Monoid for String {
 
     #[inline]
-    fn new() -> Self {
+    fn mempty() -> Self {
         Self::new()
     }
     
     #[inline]
     #[must_use]
-    fn append(&mut self, other: Self) -> Self {
+    fn mappend(&mut self, other: Self) -> Self {
         self.push_str(&other);
         self.clone()
     }

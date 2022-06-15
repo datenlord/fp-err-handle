@@ -1,7 +1,8 @@
 use crate::monad::{Monad, Functor};
 
 #[derive(Debug)]
-pub struct OptionT<M>(M);
+#[non_exhaustive]
+pub struct OptionT<M>(pub M);
 
 impl<M: Functor> Functor for OptionT<M> {
     type Unwrapped = M::Unwrapped;

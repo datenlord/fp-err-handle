@@ -1,4 +1,4 @@
-use crate::monoid::{Monoid};
+use crate::monoid::Monoid;
 
 pub trait Functor {
     type Unwrapped;
@@ -35,14 +35,14 @@ impl<A, W: Monoid> Monad for Writer<A, W> {
 
     #[inline]
     fn unit(x: Self::Unwrapped) -> Self {
-        Self(x, W::new())
+        Self(x, W::mempty())
     }
 
     #[inline]
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
         where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
         let Writer(a, mut w) = f(self.0);
-        Writer(a, w.append(self.1))
+        Writer(a, w.mappend(self.1))
     }    
 }
 

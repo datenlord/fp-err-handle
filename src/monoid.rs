@@ -19,3 +19,14 @@ impl Monoid for String {
         self.clone()
     }
 }
+
+impl<T: Clone> Monoid for Vec<T> {
+    fn mempty() -> Self {
+        Self::new()
+    }
+
+    fn mappend(&mut self, other: Self) -> Self {
+        self.append(&mut other.clone());
+        self.to_vec()
+    }
+}

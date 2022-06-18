@@ -117,3 +117,4 @@ pub mod monoid;
 pub mod iter;
 pub mod transformer;
 pub mod r#do;
+pub mod tracer;

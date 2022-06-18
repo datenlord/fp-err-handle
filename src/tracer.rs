@@ -1,64 +1,52 @@
-use std::fmt::Display;
-
+use std::fmt::{Display, Debug};
+use backtrace::Backtrace;
 use crate::{monad::{Functor, Monad}, monoid::Monoid};
 
-#[macro_export] 
-macro_rules! log {
-    () => {{
-        fn f() {}
-        fn type_name_of<T>(_: T) -> &'static str {
-            std::any::type_name::<T>()
-        }
-        let name = type_name_of(f);
-        Log {
-            func: name[..name.len() - 3].to_string(),
-            file: file!().to_string(),
-            line: line!(),
-        }
-    }}
-}
-
 #[derive(Debug, Clone)]
-pub struct Log {
-    func: String,
-    file: String,
-    line: u32,
+pub struct Log<E: Display + Clone> {
+    backtrace: Backtrace,
+    error: E
 }
 
-impl Display for Log {
+impl<E: Display + Clone> Display for Log<E> {
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "File {}, Line {}, Func: {}", self.file, self.line, self.func)
+        write!(f, "Error {}, BackTrace\n {:?}", self.error, self.backtrace)
     }
 }
 
-impl Log {
-    pub fn new() -> Self {
+impl<E: Display + Clone> Log<E> {
+    #[inline]
+    pub fn new(backtrace: Backtrace, error: E) -> Self {
         Self { 
-            func: String::mempty(),
-            file: String::mempty(), 
-            line: 0 
+            backtrace,
+            error
         }
     }
 }
 
+#[non_exhaustive]
 #[derive(Debug, Clone)]
-pub struct Tracer<A, E>(pub Result<A, E>, pub Vec<Log>);
+pub struct Tracer<A, E: Display + Clone>(pub Result<A, E>, pub Vec<Log<E>>);
 
-impl<A, E> Functor for Tracer<A, E> {
+impl<A, E: Display + Clone> Functor for Tracer<A, E> {
     type Unwrapped = A;
     type Wrapped<B> = Tracer<B, E>;
 
+    #[inline]
     fn fmap<B, F>(self, f:F) -> Self::Wrapped<B>
         where F: Fn(Self::Unwrapped) -> B {
         Tracer(self.0.fmap(f), self.1)
     }
 }
 
-impl<A, E> Monad for Tracer<A, E> {
+impl<A, E: Display + Clone> Monad for Tracer<A, E> {
+    #[inline]
     fn unit(x: Self::Unwrapped) -> Self {
         Self(Ok(x), Vec::mempty())
     }
 
+    #[inline]
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
         where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
         match self.0 {
@@ -68,32 +56,56 @@ impl<A, E> Monad for Tracer<A, E> {
     }
 }
 
-impl<A, E> Tracer<A, E> {
+impl<A, E: Display + Clone> Tracer<A, E> {
+    #[inline]
     pub fn lift(r: Result<A, E>) -> Self {
-        Tracer(r, Vec::mempty())
+        match r {
+            Ok(x) => Tracer(Ok(x), Vec::mempty()),
+            Err(e) => Tracer(
+                Err(e.clone()), 
+                Vec::mempty().mappend(vec![Log::new(Backtrace::new(), e)])
+            ),
+        }
     }
 
-    pub fn trace(mut self, log: Log) -> Self {
-        self.1.push(log);
-        self
+    #[inline]
+    pub fn map<B, F>(mut self, f:F) -> Tracer<B, E>
+        where F: Fn(Result<A, E>) -> Result<B, E> {
+        let is_err = self.0.is_err();
+        let r = f(self.0); 
+
+        if is_err { return Tracer(r, self.1); }
+
+        match r {
+            Ok(x) => Tracer(Ok(x), self.1),
+            Err(e) => Tracer(
+                Err(e.clone()), 
+                self.1.mappend(vec![Log::new(Backtrace::new(), e)])
+            ),
+        }
+    }
+
+    #[inline]
+    pub fn log(&mut self, e: E) {
+        self.1.push(Log::new(Backtrace::new(), e));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{monad::Monad, tracer::Log};
+    use crate::monad::Monad;
     use super::Tracer;
 
     #[test]
     fn it_works() {
-        println!("{}", log!());
         let z: Tracer<i32, String> = Tracer::lift(Err(" ".to_string()));
         println!("{:?}", z);
         
-        let y: Tracer<i32, String> = Tracer::unit(5).trace(log!());
+        let y = Tracer::unit("a").map(|x| x.unwrap().parse::<i32>());
         println!("{:?}", y);
 
-        let x: Tracer<i32, String> = Tracer::unit(2);
+        let mut x = Tracer::unit(2);
+        x.log("I'm an error");
         println!("{:?}", x);
     }
 }

@@ -24,8 +24,8 @@ impl<M: Monad> Monad for OptionT<M> {
     }
 
     #[inline]
-    fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+    fn bind<B, F>(self, mut f: F) -> Self::Wrapped<B>
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
         OptionT(self.0.bind(|x| f(x).0))
     }
 }

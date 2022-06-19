@@ -13,7 +13,7 @@ pub trait Monad: Functor {
     fn unit(x: Self::Unwrapped) -> Self;
 
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B>;
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B>;
 }
 
 #[derive(Debug)]
@@ -39,8 +39,8 @@ impl<A, W: Monoid> Monad for Writer<A, W> {
     }
 
     #[inline]
-    fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+    fn bind<B, F>(self, mut f: F) -> Self::Wrapped<B>
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
         let Writer(a, mut w) = f(self.0);
         Writer(a, w.mappend(self.1))
     }    
@@ -66,7 +66,7 @@ impl<A> Monad for Option<A> {
 
     #[inline]
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
         self.and_then(f)
     }
 }
@@ -91,7 +91,7 @@ impl<A, E> Monad for Result<A, E> {
 
     #[inline]
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
         self.and_then(f)
     }
 }
@@ -116,7 +116,7 @@ impl<A> Monad for Vec<A> {
 
     #[inline]
     fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
         self.into_iter().flat_map(f).collect()
     }
 }

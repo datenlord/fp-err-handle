@@ -27,11 +27,11 @@ impl<E: Display + Clone> Log<E> {
 
 #[non_exhaustive]
 #[derive(Debug, Clone)]
-pub struct Tracer<A, E: Display + Clone>(pub Result<A, E>, pub Vec<Log<E>>);
+pub struct Tracer<M, E: Display + Clone>(pub M, pub Vec<Log<E>>);
 
-impl<A, E: Display + Clone> Functor for Tracer<A, E> {
-    type Unwrapped = A;
-    type Wrapped<B> = Tracer<B, E>;
+impl<M: Functor, E: Display + Clone> Functor for Tracer<M, E> {
+    type Unwrapped = M::Unwrapped;
+    type Wrapped<B> = Tracer<M::Wrapped<B>, E>;
 
     #[inline]
     fn fmap<B, F>(self, f:F) -> Self::Wrapped<B>
@@ -40,23 +40,27 @@ impl<A, E: Display + Clone> Functor for Tracer<A, E> {
     }
 }
 
-impl<A, E: Display + Clone> Monad for Tracer<A, E> {
+impl<M: Monad, E: Display + Clone> Monad for Tracer<M, E> {
     #[inline]
     fn unit(x: Self::Unwrapped) -> Self {
-        Self(Ok(x), Vec::mempty())
+        Self(M::unit(x), Vec::mempty())
     }
 
     #[inline]
-    fn bind<B, F>(self, f: F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> Self::Wrapped<B> {
-        match self.0 {
-            Ok(x) => f(x),
-            Err(e) => Tracer(Err(e), self.1),
-        }
+    fn bind<B, F>(self, mut f: F) -> Self::Wrapped<B>
+        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> { 
+        let mut v = self.1;
+        let m = self.0.bind(|x| {
+            let t = f(x);
+            v = t.1;
+            t.0
+        });
+
+        Tracer(m, v)
     }
 }
 
-impl<A, E: Display + Clone> Tracer<A, E> {
+impl<A, E: Display + Clone> Tracer<Result<A, E>, E> {
     #[inline]
     pub fn lift(r: Result<A, E>) -> Self {
         match r {
@@ -69,7 +73,7 @@ impl<A, E: Display + Clone> Tracer<A, E> {
     }
 
     #[inline]
-    pub fn map<B, F>(mut self, f:F) -> Tracer<B, E>
+    pub fn map<B, F>(mut self, f:F) -> Tracer<Result<B, E>, E>
         where F: Fn(Result<A, E>) -> Result<B, E> {
         let is_err = self.0.is_err();
         let r = f(self.0); 
@@ -98,7 +102,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let z: Tracer<i32, String> = Tracer::lift(Err(" ".to_string()));
+        let z: Tracer<Result<i32, _>, _> = Tracer::lift(Err(" ".to_string()));
         println!("{:?}", z);
         
         let y = Tracer::unit("a").map(|x| x.unwrap().parse::<i32>());

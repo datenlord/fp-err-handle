@@ -6,12 +6,11 @@ pub trait Monoid {
 }
 
 impl Monoid for String {
-
     #[inline]
     fn mempty() -> Self {
         Self::new()
     }
-    
+
     #[inline]
     #[must_use]
     fn mappend(&mut self, other: Self) -> Self {

@@ -1,5 +1,4 @@
 #![feature(generic_associated_types)]
-
 #![deny(
     // The following are allowed by default lints according to
     // https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html
@@ -106,15 +105,14 @@
     clippy::verbose_file_reads,
     clippy::wildcard_enum_match_arm,
 )]
-
 #![allow(
     clippy::missing_docs_in_private_items,
     clippy::cargo_common_metadata,
     clippy::multiple_crate_versions, // caused by the dependency, can't be fixed
 )]
+pub mod r#do;
+pub mod iter;
 pub mod monad;
 pub mod monoid;
-pub mod iter;
-pub mod transformer;
-pub mod r#do;
 pub mod tracer;
+pub mod transformer;

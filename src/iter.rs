@@ -9,7 +9,6 @@ pub struct MapLog<I, F> {
 }
 
 impl<I, F> MapLog<I, F> {
-
     #[inline]
     pub const fn new(iter: I, f: F) -> Self {
         Self { iter, f }
@@ -17,7 +16,6 @@ impl<I, F> MapLog<I, F> {
 }
 
 pub trait TryMap: Iterator {
-
     #[inline]
     fn try_map<B, F>(self, f: F) -> MapLog<Self, F>
     where
@@ -35,8 +33,11 @@ pub trait TryCollect {
     fn try_collect(self) -> Self::M;
 }
 
-impl<B, E, I, F> TryCollect for MapLog<I, F> 
-where E: Display, I: Iterator, F: FnMut(I::Item) -> Result<B, E>
+impl<B, E, I, F> TryCollect for MapLog<I, F>
+where
+    E: Display,
+    I: Iterator,
+    F: FnMut(I::Item) -> Result<B, E>,
 {
     type M = Writer<Vec<B>, String>;
 
@@ -45,11 +46,13 @@ where E: Display, I: Iterator, F: FnMut(I::Item) -> Result<B, E>
         let mut w: Writer<Vec<B>, String> = Writer::unit(Vec::new());
         for (i, x) in self.iter.enumerate() {
             match (self.f)(x) {
-                Ok(a) => { w.0.push(a); },
-                Err(e) => { 
+                Ok(a) => {
+                    w.0.push(a);
+                }
+                Err(e) => {
                     let s = format!("\nError {} occurs on index {}", e, i);
                     w.1.push_str(&s); //append(s);
-                },
+                }
             };
         }
         w
@@ -58,12 +61,15 @@ where E: Display, I: Iterator, F: FnMut(I::Item) -> Result<B, E>
 
 #[cfg(test)]
 mod tests {
-    use super::{TryMap, TryCollect};
+    use super::{TryCollect, TryMap};
 
     #[test]
     fn it_works() {
-       let r = ["1", "a", "why", "2"].iter().try_map(|x| x.parse::<i32>()).try_collect();
-       println!("{:?}", r.0);
-       println!("{}", r.1);
+        let r = ["1", "a", "why", "2"]
+            .iter()
+            .try_map(|x| x.parse::<i32>())
+            .try_collect();
+        println!("{:?}", r.0);
+        println!("{}", r.1);
     }
 }

@@ -1,4 +1,4 @@
-use crate::monad::{Monad, Functor};
+use crate::monad::{Functor, Monad};
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -9,15 +9,15 @@ impl<M: Functor> Functor for OptionT<M> {
     type Wrapped<B> = OptionT<M::Wrapped<B>>;
 
     #[inline]
-    fn fmap<B, F>(self, f:F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> B {
+    fn fmap<B, F>(self, f: F) -> Self::Wrapped<B>
+    where
+        F: Fn(Self::Unwrapped) -> B,
+    {
         OptionT(self.0.fmap(f))
     }
 }
 
-
 impl<M: Monad> Monad for OptionT<M> {
-
     #[inline]
     fn unit(x: Self::Unwrapped) -> Self {
         Self(M::unit(x))
@@ -25,25 +25,26 @@ impl<M: Monad> Monad for OptionT<M> {
 
     #[inline]
     fn bind<B, F>(self, mut f: F) -> Self::Wrapped<B>
-        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> {
+    where
+        F: FnMut(Self::Unwrapped) -> Self::Wrapped<B>,
+    {
         OptionT(self.0.bind(|x| f(x).0))
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::{transformer::OptionT, monad::Monad};
+    use crate::{monad::Monad, transformer::OptionT};
 
     #[test]
     fn it_works() {
-       let r = OptionT(Some(5)).bind(|a| OptionT(Some(a+1)));
-       println!("{:?}", r);
+        let r = OptionT(Some(5)).bind(|a| OptionT(Some(a + 1)));
+        println!("{:?}", r);
 
-       let vec: Vec<_> = (1..=5).map(|a| Some(a)).collect();
-       println!("{:?}", vec);
+        let vec: Vec<_> = (1..=5).map(|a| Some(a)).collect();
+        println!("{:?}", vec);
 
-       let r2 = OptionT(vec).bind(|a| OptionT(vec![a.bind(|x| Some(x+1))]));
-       println!("{:?}", r2);
+        let r2 = OptionT(vec).bind(|a| OptionT(vec![a.bind(|x| Some(x + 1))]));
+        println!("{:?}", r2);
     }
 }

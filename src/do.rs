@@ -15,10 +15,10 @@ macro_rules! _mdo {
 #[cfg(test)]
 mod tests {
     use crate::{monad::Monad, transformer::OptionT};
-    
+
     #[test]
     fn it_works() {
-        let x = _mdo!{
+        let x = _mdo! {
           x <- Ok("a");
           y <- x.parse::<i32>();
           Ok(y)
@@ -26,7 +26,7 @@ mod tests {
 
         println!("{:?}", x);
 
-        let y = _mdo!{
+        let y = _mdo! {
             x <- OptionT(Some(5));
             y <- OptionT(Some(x+1));
             OptionT(Some(y*2))

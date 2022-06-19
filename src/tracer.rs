@@ -1,11 +1,14 @@
-use std::fmt::{Display, Debug};
+use crate::{
+    monad::{Functor, Monad},
+    monoid::Monoid,
+};
 use backtrace::Backtrace;
-use crate::{monad::{Functor, Monad}, monoid::Monoid};
+use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone)]
 pub struct Log<E: Display + Clone> {
     backtrace: Backtrace,
-    error: E
+    error: E,
 }
 
 impl<E: Display + Clone> Display for Log<E> {
@@ -18,10 +21,7 @@ impl<E: Display + Clone> Display for Log<E> {
 impl<E: Display + Clone> Log<E> {
     #[inline]
     pub fn new(backtrace: Backtrace, error: E) -> Self {
-        Self { 
-            backtrace,
-            error
-        }
+        Self { backtrace, error }
     }
 }
 
@@ -34,8 +34,10 @@ impl<M: Functor, E: Display + Clone> Functor for Tracer<M, E> {
     type Wrapped<B> = Tracer<M::Wrapped<B>, E>;
 
     #[inline]
-    fn fmap<B, F>(self, f:F) -> Self::Wrapped<B>
-        where F: Fn(Self::Unwrapped) -> B {
+    fn fmap<B, F>(self, f: F) -> Self::Wrapped<B>
+    where
+        F: Fn(Self::Unwrapped) -> B,
+    {
         Tracer(self.0.fmap(f), self.1)
     }
 }
@@ -48,7 +50,9 @@ impl<M: Monad, E: Display + Clone> Monad for Tracer<M, E> {
 
     #[inline]
     fn bind<B, F>(self, mut f: F) -> Self::Wrapped<B>
-        where F: FnMut(Self::Unwrapped) -> Self::Wrapped<B> { 
+    where
+        F: FnMut(Self::Unwrapped) -> Self::Wrapped<B>,
+    {
         let mut v = self.1;
         let m = self.0.bind(|x| {
             let t = f(x);
@@ -66,25 +70,29 @@ impl<A, E: Display + Clone> Tracer<Result<A, E>, E> {
         match r {
             Ok(x) => Tracer(Ok(x), Vec::mempty()),
             Err(e) => Tracer(
-                Err(e.clone()), 
-                Vec::mempty().mappend(vec![Log::new(Backtrace::new(), e)])
+                Err(e.clone()),
+                Vec::mempty().mappend(vec![Log::new(Backtrace::new(), e)]),
             ),
         }
     }
 
     #[inline]
-    pub fn map<B, F>(mut self, f:F) -> Tracer<Result<B, E>, E>
-        where F: Fn(Result<A, E>) -> Result<B, E> {
+    pub fn map<B, F>(mut self, f: F) -> Tracer<Result<B, E>, E>
+    where
+        F: Fn(Result<A, E>) -> Result<B, E>,
+    {
         let is_err = self.0.is_err();
-        let r = f(self.0); 
+        let r = f(self.0);
 
-        if is_err { return Tracer(r, self.1); }
+        if is_err {
+            return Tracer(r, self.1);
+        }
 
         match r {
             Ok(x) => Tracer(Ok(x), self.1),
             Err(e) => Tracer(
-                Err(e.clone()), 
-                self.1.mappend(vec![Log::new(Backtrace::new(), e)])
+                Err(e.clone()),
+                self.1.mappend(vec![Log::new(Backtrace::new(), e)]),
             ),
         }
     }
@@ -95,16 +103,32 @@ impl<A, E: Display + Clone> Tracer<Result<A, E>, E> {
     }
 }
 
+pub trait Sequence {
+    type Value;
+    type Err;
+
+    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err>;
+}
+
+impl<A, E: Display + Clone> Sequence for Vec<Tracer<Result<A, E>, E>> {
+    type Value = A;
+    type Err = E;
+    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err> {
+        let list = vec![];
+        Ok(list)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::monad::Monad;
     use super::Tracer;
+    use crate::monad::Monad;
 
     #[test]
     fn it_works() {
         let z: Tracer<Result<i32, _>, _> = Tracer::lift(Err(" ".to_string()));
         println!("{:?}", z);
-        
+
         let y = Tracer::unit("a").map(|x| x.unwrap().parse::<i32>());
         println!("{:?}", y);
 

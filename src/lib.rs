@@ -1,9 +1,15 @@
 #![feature(generic_associated_types)]
-
 #![deny(
     // The following are allowed by default lints according to
     // https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html
 
+<<<<<<< HEAD
+#![deny(
+    // The following are allowed by default lints according to
+    // https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html
+
+=======
+>>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e
     absolute_paths_not_starting_with_crate,
     // box_pointers, async trait must use it
     elided_lifetimes_in_paths,
@@ -106,14 +112,26 @@
     clippy::verbose_file_reads,
     clippy::wildcard_enum_match_arm,
 )]
+<<<<<<< HEAD
 
+=======
+>>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e
 #![allow(
     clippy::missing_docs_in_private_items,
     clippy::cargo_common_metadata,
     clippy::multiple_crate_versions, // caused by the dependency, can't be fixed
 )]
+<<<<<<< HEAD
 pub mod monad;
 pub mod monoid;
 pub mod iter;
 pub mod transformer;
 pub mod r#do;
+=======
+pub mod r#do;
+pub mod iter;
+pub mod monad;
+pub mod monoid;
+pub mod tracer;
+pub mod transformer;
+>>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e

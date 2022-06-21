@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [master]
 
+  push:
+    branches: [master]
+    
 env:
   CI_RUST_TOOLCHAIN: nightly
 

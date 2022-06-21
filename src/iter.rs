@@ -9,10 +9,6 @@ pub struct MapLog<I, F> {
 }
 
 impl<I, F> MapLog<I, F> {
-<<<<<<< HEAD
-
-=======
->>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e
     #[inline]
     pub const fn new(iter: I, f: F) -> Self {
         Self { iter, f }
@@ -20,10 +16,6 @@ impl<I, F> MapLog<I, F> {
 }
 
 pub trait TryMap: Iterator {
-<<<<<<< HEAD
-
-=======
->>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e
     #[inline]
     fn try_map<B, F>(self, f: F) -> MapLog<Self, F>
     where
@@ -60,11 +52,7 @@ where
                 Err(e) => {
                     let s = format!("\nError {} occurs on index {}", e, i);
                     w.1.push_str(&s); //append(s);
-<<<<<<< HEAD
-                },
-=======
                 }
->>>>>>> 32dd15430f98ddfa21e1d527bf8be6da80c1337e
             };
         }
         w

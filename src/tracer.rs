@@ -103,22 +103,6 @@ impl<A, E: Display + Clone> Tracer<Result<A, E>, E> {
     }
 }
 
-pub trait Sequence {
-    type Value;
-    type Err;
-
-    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err>;
-}
-
-impl<A, E: Display + Clone> Sequence for Vec<Tracer<Result<A, E>, E>> {
-    type Value = A;
-    type Err = E;
-    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err> {
-        let list = vec![];
-        Ok(list)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Tracer;

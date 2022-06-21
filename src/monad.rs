@@ -105,8 +105,8 @@ impl<A, E> Monad for Result<A, E> {
     }
 }
 
-impl<A> Functor for Vec<A> {
-    type Unwrapped = A;
+impl<T> Functor for Vec<T> {
+    type Unwrapped = T;
     type Wrapped<B> = Vec<B>;
 
     #[inline]
@@ -118,7 +118,7 @@ impl<A> Functor for Vec<A> {
     }
 }
 
-impl<A> Monad for Vec<A> {
+impl<T> Monad for Vec<T> {
     #[inline]
     fn unit(x: Self::Unwrapped) -> Self {
         vec![x]

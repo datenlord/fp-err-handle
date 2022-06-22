@@ -5,7 +5,7 @@ on:
     branches: [master]
 
   push:
-    branches: [master]
+    branches: [development]
     
 env:
   CI_RUST_TOOLCHAIN: nightly

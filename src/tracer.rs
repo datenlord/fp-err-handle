@@ -110,12 +110,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let z: Tracer<Result<i32, _>, _> = Tracer::lift(Err(" ".to_string()));
-        println!("{:?}", z);
-
-        let y = Tracer::unit("a").map(|x| x.unwrap().parse::<i32>());
-        println!("{:?}", y);
-
         let mut x = Tracer::unit(2);
         x.log("I'm an error");
         println!("{:?}", x);

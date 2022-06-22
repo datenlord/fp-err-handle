@@ -41,7 +41,7 @@ mod tests {
         let r = OptionT(Some(5)).bind(|a| OptionT(Some(a + 1)));
         println!("{:?}", r);
 
-        let vec: Vec<_> = (1..=5).map(|a| Some(a)).collect();
+        let vec: Vec<_> = (1..=5).map(Some).collect();
         println!("{:?}", vec);
 
         let r2 = OptionT(vec).bind(|a| OptionT(vec![a.bind(|x| Some(x + 1))]));

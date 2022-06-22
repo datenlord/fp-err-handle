@@ -27,9 +27,9 @@ mod tests {
         println!("{:?}", x);
 
         let y = _mdo! {
-            x <- OptionT(Some(5));
-            y <- OptionT(Some(x+1));
-            OptionT(Some(y*2))
+            i <- OptionT(Ok("5"));
+            j <- OptionT(Ok(i.parse::<i32>()));
+            OptionT(j)
         };
 
         println!("{:?}", y);

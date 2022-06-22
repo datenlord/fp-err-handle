@@ -103,22 +103,6 @@ impl<A, E: Display + Clone> Tracer<Result<A, E>, E> {
     }
 }
 
-pub trait Sequence {
-    type Value;
-    type Err;
-
-    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err>;
-}
-
-impl<A, E: Display + Clone> Sequence for Vec<Tracer<Result<A, E>, E>> {
-    type Value = A;
-    type Err = E;
-    fn sequence(self) -> Result<Vec<Self::Value>, Self::Err> {
-        let list = vec![];
-        Ok(list)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Tracer;
@@ -126,12 +110,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let z: Tracer<Result<i32, _>, _> = Tracer::lift(Err(" ".to_string()));
-        println!("{:?}", z);
-
-        let y = Tracer::unit("a").map(|x| x.unwrap().parse::<i32>());
-        println!("{:?}", y);
-
         let mut x = Tracer::unit(2);
         x.log("I'm an error");
         println!("{:?}", x);
